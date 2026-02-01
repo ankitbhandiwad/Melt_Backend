@@ -94,3 +94,26 @@ elevenlabsRoutes.post("/upload", async (request) => {
         })
     })
 });
+
+elevenlabsRoutes.post("/tts", async (request) => {
+    const { text } = request.body;
+
+    logger.info(`received text: ${text}`);
+
+    const audio = await elevenLabsClient.textToSpeech.convert("dXtC3XhB9GtPusIpNtQx", {
+        text: text,
+        modelId: "eleven_flash_v2_5",
+        outputFormat: "mp3_22050_32",
+    });
+
+    return new Response(audio as any, {
+        headers: {
+            "Content-Type": "audio/mpeg",
+        }
+    });
+
+}, {
+    body: t.Object({
+        text: t.String(),
+    })
+}); 
