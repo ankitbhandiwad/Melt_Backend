@@ -6,6 +6,8 @@ import path from "node:path";
 
 const judgerPrompt = fs.readFileSync(path.join(import.meta.dir, "prompts", "judger.txt"), "utf-8");
 const informerPrompt = fs.readFileSync(path.join(import.meta.dir, "prompts", "informer.txt"), "utf-8");
+const communicatorPrompt = fs.readFileSync(path.join(import.meta.dir, "prompts", "communicator.txt"), "utf-8");
+
 const aiClient = new GoogleGenAI({
     apiKey: process.env["GEMINI_API_KEY"]
 })
@@ -111,7 +113,7 @@ geminiRoutes.post("/inform", async (request) => {
 })
 
 geminiRoutes.post("/communicate", async (request) => {
-    const { transcript } = request.body;
+    const { transcript, location, name } = request.body;
 
     logger.debug(`Recieved transcript: \n${transcript}\n`);
 
@@ -122,7 +124,7 @@ geminiRoutes.post("/communicate", async (request) => {
                 role: "model",
                 parts: [
                     {
-                        text: "You are an AI agent in charge of communicating with a person.",
+                        text: communicatorPrompt,
                     }
                 ]
             },
@@ -130,7 +132,7 @@ geminiRoutes.post("/communicate", async (request) => {
                 role: "user",
                 parts: [
                     {
-                        text: transcript,
+                        text: `Transcript: \n${transcript}\nLocation: ${location}\nName: ${name}`,
                     },
                 ],
             },
@@ -140,7 +142,7 @@ geminiRoutes.post("/communicate", async (request) => {
             responseSchema: {
                 type: "object",
                 properties: {
-                    information: {
+                    communicate: {
                         type: "string",
                     },
                 },
@@ -153,6 +155,8 @@ geminiRoutes.post("/communicate", async (request) => {
     return response.text;
 }, {
     body: t.Object({
-        transcript: t.String()
+        transcript: t.String(),
+        location: t.String(),
+        name: t.String(),
     })
 })
